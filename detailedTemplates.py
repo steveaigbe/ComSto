@@ -45,33 +45,33 @@ def distTemp():
 
 # Templates to generate Outlier measure sentence
 def outTemp1():
-    OutTemplates1 = {1: "Both histograms have no outliers. ",
+    outTemplates1 = {1: "Both histograms have no outliers. ",
                  2: "Both histograms have $numOutlier1 outliers. "}
-    return OutTemplates1
+    return outTemplates1
 
 # Templates to generate Outlier measure sentence
 def outTemp2():
-    OutTemplates2 = {1: "Histogram1 has $numOutlier1 outliers with a maximum outlier of $maxOutlier1 while Histogram2 has $numOutlier2 outliers. ",
+    outTemplates2 = {1: "Histogram1 has $numOutlier1 outliers with a maximum outlier of $maxOutlier1 while Histogram2 has $numOutlier2 outliers. ",
                  2: "Histogram1 has $numOutlier1 outliers with a maximum outlier of $maxOutlier1 but Histogram2 has no outliers. "}
-    return OutTemplates2
+    return outTemplates2
 
 # Templates to generate Outlier measure sentence
 def outTemp3():
-    OutTemplates3 = {1: "Histogram1 has $numOutlier1 outliers while Histogram2 has $numOutlier2 outliers with a maximum outlier of $maxOutlier2. ",
+    outTemplates3 = {1: "Histogram1 has $numOutlier1 outliers while Histogram2 has $numOutlier2 outliers with a maximum outlier of $maxOutlier2. ",
                  2: "Histogram1 has no outliers but Histogram2 has $numOutlier2 outliers with a maximum outlier of $maxOutlier2. "}
-    return OutTemplates3
+    return outTemplates3
 
 # Templates to generate Outlier measure sentence
 def outTemp4():
-    OutTemplates4 = {1: "Histogram1 has $numOutlier1 outliers with a maximum outlier of $maxOutlier1 while Histogram2 has $numOutlier2 outliers with a maximum outlier of $maxOutlier2. ",
+    outTemplates4 = {1: "Histogram1 has $numOutlier1 outliers with a maximum outlier of $maxOutlier1 while Histogram2 has $numOutlier2 outliers with a maximum outlier of $maxOutlier2. ",
                  2: "Histogram1 has $numOutlier1 outliers with a maximum outlier of $maxOutlier1 but Histogram2 has $numOutlier2 outliers with a maximum outlier of $maxOutlier2. "}
-    return OutTemplates4
+    return outTemplates4
 
 # Templates to generate Outlier measure sentence
 def outTemp5():
-    OutTemplates5 = {1: "Histogram1 has $numOutlier1 outliers same as histogram2. ",
+    outTemplates5 = {1: "Histogram1 has $numOutlier1 outliers same as histogram2. ",
                  2: "Both histograms have $numOutlier1 outliers. "}
-    return OutTemplates5
+    return outTemplates5
 
 # Templates to generate peak measure sentence
 def peakRegionTemp():

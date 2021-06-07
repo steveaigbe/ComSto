@@ -1,3 +1,201 @@
+#Import required libraries
+import numpy as np
+import statistics as st
+import pandas as pd
+import matplotlib.pyplot as plt
+import scipy.stats as sc
+from scipy.signal import find_peaks as fp
+from yattag import Doc, indent
+import random
+import math
+import seaborn as sns
+from string import Template
+import ast
+import sys
+import logging
+logging.getLogger('matplotlib.font_manager').disabled = True
+
+import GenMetrics
+from xmlModules import genXMLOutput, xmlToFacts
+from miscModules import peakStats, outlierStats, precision
+from computeDist import compute_bins, bdm
+from detailedStoryGen import minSentence, maxSentence, meanSentence, stdSentence, distSentence, outlierSentence, skewSentence
+from detailedStoryGen import peakSentence, peak1Story, peak2Story, peakRegionSent, peakStory, storyGen, detailedPrint, fullPrint
+
+from shortStoryGen import shortMinSentence, shortMaxSentence, shortMeanSentence, shortStdSentence, shortSkewSentence
+from shortStoryGen import shortOutlierSentence, shortPeakSentence, shortStoryGen, myPrint
+
+import clips
+import logging
+env = clips.Environment()
+logging.basicConfig(level=10, format='%(message)s')
+router = clips.LoggingRouter()
+router.add_to_environment(env)
+
+#set random seed
+np.random.seed(444)
+np.set_printoptions(precision=2)
+
+num_arg = len(sys.argv)
+if num_arg != 3:
+    print("Please run the program correctly: 'main_prog.py <csv_input_file> <story_type>'")
+    sys.exit()
+    
+data_val = pd.read_csv(sys.argv[1])
+data1 = list(data_val.val1)
+data2 = list(data_val.val2)
+
+story_type = sys.argv[2]
+
+def parameters(obj1, obj2):
+    # Generates the comparison parameters as a json file
+    data_input = {'Mean1': GenMetrics.mean(obj1), 'Mean2': GenMetrics.mean(obj2), 
+            'StdDev1': GenMetrics.stddev(obj1), 'StdDev2': GenMetrics.stddev(obj2),
+            'Max1': GenMetrics.maxval(obj1), 'Max2': GenMetrics.maxval(obj2),
+            'Min1': GenMetrics.minval(obj1), 'Min2': GenMetrics.minval(obj2),
+            'Skew_Value1': GenMetrics.skewness(obj1), 'Skew_Value2': GenMetrics.skewness(obj2), 
+            'Outliers1': GenMetrics.outliers(obj1), 'Outliers2': GenMetrics.outliers(obj2),
+            'Peaks1': GenMetrics.peaks(obj1), 'Peaks2': GenMetrics.peaks(obj2)}
+    return data_input
+
+# Compute histogram measures
+data = parameters(data1, data2)
+
+# Generate xml data object
+main = genXMLOutput(data)
+hist1, hist2 = xmlToFacts(main)
+
+# Generate peak stats 
+size1, binlist1, freq1, binsize1 = peakStats(ast.literal_eval(hist1['peak']))
+size2, binlist2, freq2, binsize2 = peakStats(ast.literal_eval(hist2['peak']))
+hist1['peakbinlist'] = str(binlist1)
+hist2['peakbinlist'] = str(binlist2)
+hist1['peakfreq'] = str(freq1)
+hist2['peakfreq'] = str(freq2)
+hist1['peakbinsize'] = str(binsize1)
+hist2['peakbinsize'] = str(binsize2)
+hist1['peaksize'] = str(size1)
+hist2['peaksize'] = str(size2)
+
+del hist1['peak']
+del hist2['peak']
+
+# Generate outliers stats
+outlier1, outmax1 = outlierStats(ast.literal_eval(hist1['outlier']))
+outlier2, outmax2 = outlierStats(ast.literal_eval(hist2['outlier']))
+hist1['outlier'] = str(outlier1)
+hist1['outmax'] = str(outmax1)
+hist2['outlier'] = str(outlier2)
+hist2['outmax'] = str(outmax2)
+
+# Compute distance measure and add to facts
+k = len(compute_bins(data1, 10)) - 1
+bdmval = bdm(data1, data2)
+hist1['distance'] = str(bdmval)
+hist2['distance'] = str(bdmval)
+
+
+env.clear()
+
+template_string1 = """
+(deftemplate histogram1
+  (slot min1)
+  (slot max1)
+  (slot mean1)
+  (slot std1)
+  (slot distance)
+  (slot skew1)
+  (slot outlier1)
+  (slot outlier1max)
+  (slot peak1size)
+  (slot peak1binlist)
+  (slot peak1freq)
+  (slot peak1binsize)
+  )
+"""
+
+env.build(template_string1)
+template1 = env.find_template('histogram1')
+new_fact1 = template1.new_fact()
+
+new_fact1['min1'] = ast.literal_eval(hist1['min'])
+new_fact1['max1'] = ast.literal_eval(hist1['max'])
+new_fact1['mean1'] = ast.literal_eval(hist1['mean'])
+new_fact1['std1'] = ast.literal_eval(hist1['stdDev'])
+new_fact1['distance'] = ast.literal_eval(hist1['distance'])
+new_fact1['skew1'] = ast.literal_eval(hist1['skew'])
+new_fact1['outlier1'] = ast.literal_eval(hist1['outlier'])
+new_fact1['outlier1max'] = ast.literal_eval(hist1['outmax'])
+new_fact1['peak1size'] = ast.literal_eval(hist1['peaksize'])
+new_fact1['peak1binlist'] = hist1['peakbinlist']
+new_fact1['peak1freq'] = hist1['peakfreq']
+new_fact1['peak1binsize'] = ast.literal_eval(hist1['peakbinsize'])
+
+new_fact1.assertit()
+
+template_string2 = """
+(deftemplate histogram2
+  (slot min2)
+  (slot max2)
+  (slot mean2)
+  (slot std2)
+  (slot distance)
+  (slot skew2)
+  (slot outlier2)
+  (slot outlier2max)
+  (slot peak2size)
+  (slot peak2binlist)
+  (slot peak2freq)
+  (slot peak2binsize)
+  )
+"""
+
+env.build(template_string2)
+template2 = env.find_template('histogram2')
+new_fact2 = template2.new_fact()
+
+new_fact2['min2'] = ast.literal_eval(hist2['min'])
+new_fact2['max2'] = ast.literal_eval(hist2['max'])
+new_fact2['mean2'] = ast.literal_eval(hist2['mean'])
+new_fact2['std2'] = ast.literal_eval(hist2['stdDev'])
+new_fact2['distance'] = ast.literal_eval(hist2['distance'])
+new_fact2['skew2'] = ast.literal_eval(hist2['skew'])
+new_fact2['outlier2'] = ast.literal_eval(hist2['outlier'])
+new_fact2['outlier2max'] = ast.literal_eval(hist2['outmax'])
+new_fact2['peak2size'] = ast.literal_eval(hist2['peaksize'])
+new_fact2['peak2binlist'] = hist2['peakbinlist']
+new_fact2['peak2freq'] = hist2['peakfreq']
+new_fact2['peak2binsize'] = ast.literal_eval(hist2['peakbinsize'])
+
+new_fact2.assertit()
+
+env.define_function(shortMinSentence)
+env.define_function(shortMaxSentence)
+env.define_function(shortMeanSentence)
+env.define_function(shortStdSentence)
+env.define_function(shortSkewSentence)
+env.define_function(shortOutlierSentence)
+env.define_function(shortPeakSentence)
+env.define_function(shortStoryGen)
+env.define_function(myPrint)
+
+env.define_function(minSentence)
+env.define_function(maxSentence)
+env.define_function(meanSentence)
+env.define_function(stdSentence)
+env.define_function(skewSentence)
+env.define_function(distSentence)
+env.define_function(precision)
+env.define_function(outlierSentence)
+env.define_function(peakSentence)
+env.define_function(peak1Story)
+env.define_function(peak2Story)
+env.define_function(peakRegionSent)
+env.define_function(peakStory)
+env.define_function(storyGen)
+env.define_function(fullPrint)
+env.define_function(detailedPrint)
+
 # Created rules for short story
 Short_Rule1 = """
 (defrule fill-short-max-template
@@ -99,14 +297,7 @@ Short_Rule8 = """
 
 env.build(Short_Rule8)
 
-Short_Rule9 = """
-(defrule short-story-print
-(short-story ?sstory)
-=>
-(myPrint ?sstory)
-)
-"""
-env.build(Short_Rule9)
+env.run()
 
 #Created rules for detailed story
 rule1 = """
@@ -1458,22 +1649,96 @@ rule119 = """
 """
 env.build(rule119)
 
-rule120 = """
-(defrule story-print
-(story ?story)
-=>
-(detailedPrint ?story)
-)
-"""
-env.build(rule120)
+env.run()
 
-both_rule1 = """
-(defrule both-story-print
-(story ?story)
-(short-story ?sstory)
-=>
-(fullPrint ?sstory ?story)
-)
-"""
-env.build(both_rule1)
+if story_type == "short":
+    # Display the two histogram
+    import matplotlib.pyplot as plt1
+    bins=list(compute_bins(data1, 10))
+    fig = plt1.figure(figsize=(12,6))
+    ax1=fig.add_subplot(121)
+    ax1.set_title("Histogram 1", fontsize=14)
+    ax1.hist(data1, bins=bins, edgecolor='black')
+    ax1.set_xlabel("Bins", fontsize=14)
+    ax1.set_ylabel("Frequency", fontsize=14)
+    ax2=fig.add_subplot(122)
+    ax2.set_title("Histogram 2", fontsize=14)
+    ax2.hist(data2, bins=bins, edgecolor='black')
+    ax2.set_xlabel("Bins", fontsize=14)
+    ax2.set_ylabel("Frequency", fontsize=14)
+    plt1.show()
+    
+    # Print the short story
+    Short_Rule9 = """
+    (defrule short-story-print
+    (short-story ?sstory)
+    =>
+    (myPrint ?sstory)
+    )
+    """
+    env.build(Short_Rule9)
+    env.run()
+
+elif story_type == "detailed":
+    # Display the two histogram
+    import matplotlib.pyplot as plt1
+    bins=list(compute_bins(data1, 10))
+    fig = plt1.figure(figsize=(12,6))
+    ax1=fig.add_subplot(121)
+    ax1.set_title("Histogram 1", fontsize=14)
+    ax1.hist(data1, bins=bins, edgecolor='black')
+    ax1.set_xlabel("Bins", fontsize=14)
+    ax1.set_ylabel("Frequency", fontsize=14)
+    ax2=fig.add_subplot(122)
+    ax2.set_title("Histogram 2", fontsize=14)
+    ax2.hist(data2, bins=bins, edgecolor='black')
+    ax2.set_xlabel("Bins", fontsize=14)
+    ax2.set_ylabel("Frequency", fontsize=14)
+    plt1.show()
+    
+    # Print the detailed story
+    rule120 = """
+    (defrule story-print
+    (story ?story)
+    =>
+    (detailedPrint ?story)
+    )
+    """
+
+    env.build(rule120)
+    env.run()
+    
+elif story_type == "both":
+    # Display the two histogram
+    import matplotlib.pyplot as plt1
+    bins=list(compute_bins(data1, 10))
+    fig = plt1.figure(figsize=(12,6))
+    ax1=fig.add_subplot(121)
+    ax1.set_title("Histogram 1", fontsize=14)
+    ax1.hist(data1, bins=bins, edgecolor='black')
+    ax1.set_xlabel("Bins", fontsize=14)
+    ax1.set_ylabel("Frequency", fontsize=14)
+    ax2=fig.add_subplot(122)
+    ax2.set_title("Histogram 2", fontsize=14)
+    ax2.hist(data2, bins=bins, edgecolor='black')
+    ax2.set_xlabel("Bins", fontsize=14)
+    ax2.set_ylabel("Frequency", fontsize=14)
+    plt1.show()
+    
+    # Print the combine story
+    both_rule1 = """
+    (defrule both-story-print
+    (story ?story)
+    (short-story ?sstory)
+    =>
+    (fullPrint ?sstory ?story)
+    )
+    """
+
+    env.build(both_rule1)
+    env.run()
+
+else:
+    print('please specify the correct story type as second argument i.e. "short" or "detailed" or "both"')
+    sys.exit()
 

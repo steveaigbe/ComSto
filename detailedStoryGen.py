@@ -105,52 +105,52 @@ def skewSentence(obj1, obj2):
 
 # Function to generate detailed outlier sentence
 def outlierSentence(outlier1, outlier2, maxOut1, maxOut2):
-    OutTemplates1 = OutTemp1()
-    OutTemplates2 = OutTemp2()
-    OutTemplates3 = OutTemp3()
-    OutTemplates4 = OutTemp4()
-    OutTemplates5 = OutTemp5()
+    outTemplates1 = outTemp1()
+    outTemplates2 = outTemp2()
+    outTemplates3 = outTemp3()
+    outTemplates4 = outTemp4()
+    outTemplates5 = outTemp5()
     if  outlier1 == 0 and outlier2 == 0:
-        size1 = len(OutTemplates1)
+        size1 = len(outTemplates1)
         randNum = random.randint(1,size1)
         if randNum == 2:
-            template = OutTemplates1[randNum]
+            template = outTemplates1[randNum]
             sentence = Template(template)
             return sentence.substitute(numOutlier1=outlier1)
         else:
-            return OutTemplates1[randNum]
+            return outTemplates1[randNum]
     elif outlier1 != 0 and outlier2 == 0:
-        size2 = len(OutTemplates2)
+        size2 = len(outTemplates2)
         randNum = random.randint(1,size2)
         if randNum == 1:
-            template = OutTemplates2[randNum]
+            template = outTemplates2[randNum]
             sentence = Template(template)
             return sentence.substitute(numOutlier1=outlier1, maxOutlier1=maxOut1, numOutlier2=outlier2)
         else:
-            template = OutTemplates2[randNum]
+            template = outTemplates2[randNum]
             sentence = Template(template)
             return sentence.substitute(numOutlier1=outlier1, maxOutlier1=maxOut1)
     elif outlier1 == 0 and outlier2 != 0:
-        size3 = len(OutTemplates3)
+        size3 = len(outTemplates3)
         randNum = random.randint(1,size3)
         if randNum == 1:
-            template = OutTemplates3[randNum]
+            template = outTemplates3[randNum]
             sentence = Template(template)
             return sentence.substitute(numOutlier1=outlier1, numOutlier2=outlier2, maxOutlier2=maxOut2)
         else:
-            template = OutTemplates3[randNum]
+            template = outTemplates3[randNum]
             sentence = Template(template)
             return sentence.substitute(numOutlier2=outlier2, maxOutlier2=maxOut2)
     elif outlier1 != 0 and outlier2 != 0:
-        size4 = len(OutTemplates4)
+        size4 = len(outTemplates4)
         randNum = random.randint(1,size4)
-        template = OutTemplates4[randNum]
+        template = outTemplates4[randNum]
         sentence = Template(template)
         return sentence.substitute(numOutlier1=outlier1, maxOutlier1=maxOut1, numOutlier2=outlier2, maxOutlier2=maxOut2)
     elif outlier1 != 0 and outlier2 != 0 and outlier1 == outlier2:
-        size5 = len(OutTemplates5)
+        size5 = len(outTemplates5)
         randNum = random.randint(1,size5)
-        template = OutTemplates5[randNum]
+        template = outTemplates5[randNum]
         sentence = Template(template)
         return sentence.substitute(numOutlier1=outlier1)
     
